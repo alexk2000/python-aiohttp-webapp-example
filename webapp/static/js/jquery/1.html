@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>tabs demo</title>
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css">
+    <script src="//code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="//code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+</head>
+
+<body>
+
+
+    <script>
+
+        function cl2() {
+            this.name = "";
+            this.age = 0;
+            this.init = function(name, age) {
+                this.name = name;
+                this.age = age;
+            };
+            this.print = function () {
+                    // console.log(this.name, this.age);
+                    console.dir(this);
+                }
+        };
+
+        function cl1() {
+            var cl = {
+                name: "",
+                age: 0,
+                init: function (name, age) {
+                    this.name = name;
+                    this.age = age;
+                },
+
+                print: function () {
+                    // console.log(this.name, this.age);
+                    console.dir(this);
+                }
+            };
+            return cl;
+        };
+
+        var p1 = new cl2();
+        var p2 = new cl2();
+        p1.init("alex", 37);
+        p2.init("Kate", 32);
+        p1.print();
+        p2.print();
+
+// var q = {
+//     name: "alex",
+//     age: 37
+// };
+
+// $.each(q, function(key, val) {
+//     console.log("key: " + key + ", value: " + val);
+// })
+
+    </script>
+
+</body>
+
+</html>

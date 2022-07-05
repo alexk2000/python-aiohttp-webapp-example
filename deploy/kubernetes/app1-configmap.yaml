@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app1-cm
+  labels:
+    app: app1
+data:
+  config.yml: |-
+    postgres:
+      database: web1
+      user: web1
+      password: web1
+      host: app1-db-svc
+      port: 5432
+      minsize: 1
+      maxsize: 5
+
+    host: "*"
+    port: 80

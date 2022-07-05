@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <!-- The jQuery library is a prerequisite for all jqSuite products -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <!-- We support more than 40 localizations -->
+    <script type="text/ecmascript" src="/static/js/jqgrid/js/i18n/grid.locale-en.js"></script>
+    <!-- This is the Javascript file of jqGrid -->
+    <script type="text/ecmascript" src="/static/js/jqgrid/src/jquery.jqGrid.js"></script>
+    <!-- This is the localization file of the grid controlling messages, labels, etc.
+    <!-- A link to a jQuery UI ThemeRoller theme, more than 22 built-in and many more custom -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <!-- The link to the CSS that the grid needs -->
+    <link rel="stylesheet" type="text/css" media="screen" href="/static/js/jqgrid/css/ui.jqgrid-bootstrap.css" />
+    <script>
+        $.jgrid.defaults.width = 780;
+        $.jgrid.defaults.responsive = true;
+        $.jgrid.defaults.styleUI = 'Bootstrap';
+    </script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <meta charset="utf-8" />
+    <title>jqGrid Loading Data - JSON Live</title>
+</head>
+
+<body>
+    <div style="margin-left:20px">
+        <table id="jqGrid"></table>
+        <div id="jqGridPager"></div>
+    </div>
+    <script type="text/javascript"> 
+
+        $(document).ready(function () {
+            $("#jqGrid").jqGrid({
+                colModel: [
+                    {
+                        label: 'ID',
+                        name: 'ID',
+                        key: true,
+                        width: 20
+                    },
+                    {
+                        label: 'Title',
+                        name: 'Title',
+                        editable: true,
+                        width: 100
+                    },
+                    {
+                        label: 'Description',
+                        name: 'Description',
+                        editable: true,
+                        width: 100
+                    },
+                    {
+                        label: 'Done',
+                        name: 'Done',
+                        editable: true,
+                        width: 50,
+                        align: 'right'
+                    }
+                ],
+
+                viewrecords: true, // show the current page, data rang and total records on the toolbar
+                width: 780,
+                height: 200,
+                rowNum: 15,
+                datatype: 'local',
+                pager: "#jqGridPager",
+                caption: "Todo list",
+                sortname: 'ID',
+                sortorder: 'asc',
+                loadonce: true
+            });
+
+
+            $('#jqGrid').navGrid('#jqGridPager',
+                // the buttons to appear on the toolbar of the grid
+                { edit: true, add: true, del: true, search: false, refresh: false, view: false, position: "left", cloneToTop: false },
+                // options for the Edit Dialog
+                {
+                    editCaption: "The Edit Dialog",
+                    recreateForm: true,
+                    checkOnUpdate: true,
+                    checkOnSubmit: true,
+                    closeAfterEdit: true,
+                    errorTextFormat: function (data) {
+                        return 'Error: ' + data.responseText
+                    }
+                },
+                // options for the Add Dialog
+                {
+                    url: '/todo/api/v1.0/tasks',
+                    closeAfterAdd: true,
+                    recreateForm: true,
+                    errorTextFormat: function (data) {
+                        return 'Error: ' + data.responseText
+                    }
+                },
+                // options for the Delete Dailog
+                {
+                    url: '/todo/api/v1.0/tasks',    
+                    errorTextFormat: function (data) {
+                        return 'Error: ' + data.responseText
+                    }
+                });
+
+            fetchGridData();
+
+            function fetchGridData() {
+
+                var gridArrayData = [];
+                // show loading message
+                $("#jqGrid")[0].grid.beginReq();
+                $.ajax({
+                    url: "http://127.0.0.1:8080/todo/api/v1.0/tasks",
+                    success: function (result) {
+                        for (var i = 0; i < result.tasks.length; i++) {
+                            var item = result.tasks[i];
+                            gridArrayData.push({
+                                ID: item.id,
+                                Title: item.title,
+                                Description: item.description,
+                                Done: item.done
+                            });
+                        }
+                        // set the new data
+                        $("#jqGrid").jqGrid('setGridParam', { data: gridArrayData });
+                        // hide the show message
+                        $("#jqGrid")[0].grid.endReq();
+                        // refresh the grid
+                        $("#jqGrid").trigger('reloadGrid');
+                    }
+                });
+            }
+
+            function formatTitle(cellValue, options, rowObject) {
+                return cellValue.substring(0, 50) + "...";
+            };
+
+            function formatLink(cellValue, options, rowObject) {
+                return "<a href='" + cellValue + "'>" + cellValue.substring(0, 25) + "..." + "</a>";
+            };
+
+
+
+        });
+
+    </script>
+
+
+</body>
+
+</html>

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        .green {
+            color: green;
+        }
+
+        .red {
+            color: red;
+        }
+    </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script>
+
+        var status, d;
+        var lastSuccessTime;
+        var diffTime = 10000;
+        var getAllTasksTimer = false;
+
+        function deleteByID(id) {
+            $.ajax({
+                url: '/todo/api/v1.0/tasks/' + id,
+                type: 'DELETE',
+                success: function (result) {
+                    // Do something with the result
+                }
+            });
+            getAllTasks();
+
+        };
+        function checkLastUpdate() {
+            curTime = new Date().getTime();
+            if ((curTime - lastSuccessTime) > diffTime) {
+                $("#ls").css("background-color", "red");
+            } else {
+                $("#ls").css("background-color", "green");
+            }
+
+        };
+
+        function updateTask(id, title, description) {
+            console.log(id, title, description);
+            $.ajax({
+                url: '/todo/api/v1.0/tasks/' + id,
+                type: 'PUT',
+                contentType: 'application/json',
+                processData: false,
+                data: JSON.stringify({
+                    'title': title,
+                    // description: $("#description").val(),
+                }),
+                success: function (result) {
+                    // Do something with the result
+                }
+            });
+            getAllTasks();
+        };
+        function getAllTasks() {
+            // console.log("getAllTasks");
+            $.ajax({
+                url: "/todo/api/v1.0/tasks", success: function (result) {
+
+                    var allTasks = "<table border=1><tr><th>id</th><th>title</th><th>description</th><th>status</th><th>action</th></tr>";
+                    for (i in result['tasks']) {
+                        var id = result['tasks'][i]['id'];
+                        var title = result['tasks'][i]['title'];
+                        var description = result['tasks'][i]['description'];
+                        status = "in progress";
+                        if (result['tasks'][i]['done']) {
+                            status = "done";
+                        };
+                        allTasks += "<tr><td>" + id + "</td><td><input onchange='updateTask(" + id + ",this.value,false)' type='text' value='"
+                            + title + "'></td><td>" + description + "</td><td>" + status +
+                            "</td></td><td><button onclick='deleteByID(" + id + ")'>delete</button></td></tr></tr>";
+                    };
+                    allTasks += "</table>";
+                    $("#tasks").html(allTasks);
+
+                    d = new Date();
+                    lastSuccessTime = d.getTime();
+                    document.getElementById("ls").innerHTML = d.toLocaleTimeString();
+                }
+            });
+        }
+
+
+        // w.postMessage(['hello world!']);
+
+        // function startWorker() {
+        //     if (typeof (Worker) !== "undefined") {
+        //         if (typeof (w) == "undefined") {
+        //             w = new Worker("/static/js/webWorker.js");
+        //         }
+        //         w.onmessage = function (event) {
+        //             document.getElementById("result").innerHTML = event.data;
+        //         };
+        //     } else {
+        //         document.getElementById("result").innerHTML = "Sorry! No Web Worker support.";
+        //     }
+        // }
+
+        // function stopWorker() {
+        //     w.terminate();
+        //     w = undefined;
+        // }
+
+        function toggleAllTasks() {
+            if (getAllTasksTimer) {
+                clearInterval(getAllTasksTimer);
+                getAllTasksTimer = false;
+                $("#toggleTaskButton").text('Start getting tasks');
+            } else {
+                getAllTasksTimer = setInterval(getAllTasks, 2000);
+                $("#toggleTaskButton").text('Stop getting tasks');
+            };
+        };
+
+        $(document).ready(function () {
+            console.log('document ready');
+            toggleAllTasks();
+            // var checkLastUpdateTimer = setInterval(checkLastUpdate, 2000);
+            setInterval(checkLastUpdate, 2000);
+
+            // add new task functionality
+            $("#addTask").click(function () {
+                $.ajax({
+                    url: '/todo/api/v1.0/tasks',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    processData: false,
+                    data: JSON.stringify({
+                        title: $("#title").val(),
+                        description: $("#description").val(),
+                    }),
+                    success: function (result) {
+                        // Do something with the result
+                    }
+                });
+                $("#title").val("");
+                $("#description").val("");
+                getAllTasks();
+            });
+
+            // web worker example
+            var w = new Worker("/static/js/webWorker.js");
+            w.onmessage = function (event) {
+                document.getElementById("result").innerHTML = event.data;
+            };
+            calc = $('#calc')
+            calc.change(function () {
+                // w.postMessage($('#calc').val());
+                w.postMessage(calc.val());
+            });
+
+        });
+
+    </script>
+</head>
+
+<body>
+    <a href="/static/jqgrid2.html">jqgrid version</a><br>
+    <p>Timer+jquery+ajax</p>
+    <button id="toggleTaskButton" onclick="toggleAllTasks()"></button>
+    Successfuly updated:
+    <span id="ls"></span>
+    <p id="tasks"></p>
+    <form action="javascript:void(0);">
+        <fieldset style="display: inline">
+            title:
+            <br>
+            <input id="title" type="text">
+            <br> description:
+            <br>
+            <textarea id="description"></textarea>
+            <br>
+            <button id="addTask">add task</button>
+            <input type="reset" value="clear fields">
+        </fieldset>
+    </form>
+    <hr> Web worker example:
+    <input id="calc" type="text"> *10 =
+    <output id="result"></output>
+    <!-- <br>
+    <p>Count numbers:
+        <output id="result"></output>
+    </p>
+    <button onclick="startWorker()">Start Worker</button>
+    <button onclick="stopWorker()">Stop Worker</button> -->
+</body>
+
+</html>

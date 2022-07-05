@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: app1-svc
+  labels:
+    app: app1
+spec:
+  ports:
+    - port: 80
+  selector:
+    type: app1-frontend
+  type: NodePort
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app1-dep
+  labels:
+    app: app1
+    type: app1-frontend
+spec:
+  selector:
+    matchLabels:
+      app: app1
+      type: app1-frontend
+  template:
+    metadata:
+      labels:
+        app: app1
+        type: app1-frontend
+    spec:
+      containers:
+      - image: registry.kmaster:30500/app1
+        imagePullPolicy: Always
+#        command: ["sleep"]
+#        args: ["40000"]
+        name: app1
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: config-file
+          mountPath: /usr/src/app/config.yml
+          subPath: config.yml
+      volumes:
+       - name: config-file
+         configMap:
+           name: app1-cm

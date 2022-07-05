@@ -1,0 +1,79 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: app1-db-svc
+  labels:
+    app: app1
+spec:
+  ports:
+    - port: 5432
+  selector:
+    app: app1
+    type: db
+  type: NodePort
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: app1-db-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
+kind: Deployment
+metadata:
+  name: app1-db-dep
+  labels:
+    app: app1
+    type: db
+spec:
+  selector:
+    matchLabels:
+      app: app1
+      type: db
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: app1
+        type: db
+    spec:
+      containers:
+      - image: postgres:9.5
+        name: app1-db
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: app1-db-admin
+              key: username
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: app1-db-admin
+              key: password
+#        env:
+#        - name: POSTGRES_USER
+#          value: postgres
+#        - name: POSTGRES_PASSWORD
+#          value: postgres
+        ports:
+        - containerPort: 5432
+        volumeMounts:
+        - name: db-persistent-storage
+          mountPath: /var/lib/postgresql/data
+        - name: app1-db-dump
+          mountPath: /docker-entrypoint-initdb.d/web1.sql
+          subPath: web1.sql
+
+      volumes:
+      - name: db-persistent-storage
+        persistentVolumeClaim:
+      - name: app1-db-dump
+        configMap:
+          name: app1-db-dump
